@@ -3,7 +3,7 @@
 
 #include <string>
 
-int main()
+int main2()
 {
 	sf::RenderWindow window(sf::VideoMode(512, 512), "Animation!", sf::Style::Close | sf::Style::Resize);
 	sf::RectangleShape player(sf::Vector2f(100.0f, 100.0f));
