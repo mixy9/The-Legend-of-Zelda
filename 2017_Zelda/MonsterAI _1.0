@@ -1,0 +1,195 @@
+// Monster Atk State can be replaced by Weapon class methods
+
+
+
+//using global instances of States instead of singleton
+		// TODO: SINGLETON or FlyweightFactory
+
+AttackMovementState* instance_AttackMovementState = new ArmedAttackMovementState;
+
+
+// MONSTER
+		// 1 monster class, config initiates different monster obj
+
+class Monster 
+{
+public:
+
+	Monster act()
+	{
+		movementState->act(this);
+		// refresh atackstate // if cd, cd goes down, if not nothing. / or refresh weapon state
+		// pull monster data
+	}
+
+	// Movement Behaviour variables - used in MovementStates
+
+	MovementBehaviour* guardMovementState_MovementBehaviour;
+	MovementBehaviour* armedAttackMovementState_MovementBehaviour;
+	MovementBehaviour* unarmedAttackMovementState_MovementBehaviour;
+	MovementBehaviour* resetMovementState_MovementBehaviour;
+
+	// State transtion variables - used in MovementStates
+	// TODO: Change appropriately
+
+	int aggroRange;
+	int loseAggroRange;
+	int playerDistance;
+	
+
+	// TODO: Monster variables
+	
+	// position
+	// weapon
+
+
+private:
+
+	// Manages MonsterMovementState change 
+			// state change is managed by the states
+
+	friend class MonsterMovementState;
+
+	void changeMovementState(MonsterMovementState* movementState)
+	{
+		this->movementState = movementState;
+	}
+
+	MonsterMovementState* movementState; // will be a factory assignment 
+
+	// Manages MonsterAttackState change
+			//TODO: MonsterAttackState 
+
+};
+
+// MONSTER BEHAVIOUR STATE
+		// TODO: FLYWEIGHT/SINGLETON
+
+class MonsterMovementState
+{
+public:
+	Monster* act(Monster* currentMonsterObject)
+	{
+		executeAssignedStateBehaviour(currentMonsterObject);
+		manageState(currentMonsterObject);
+	}
+
+protected:
+	virtual void manageState(Monster*) = 0;
+	virtual void executeAssignedStateBehaviour(Monster*) = 0;
+
+	void changeMovementState(Monster* currentMonsterObject, MonsterMovementState* nextmovementState)
+	{
+		currentMonsterObject->changeMovementState(nextmovementState);
+	}
+	
+};
+
+
+class GuardMovementState : public MonsterMovementState
+{
+protected:
+	void executeAssignedStateBehaviour(Monster* currentMonsterObject)
+	{
+		 currentMonsterObject->guardMovementState_MovementBehaviour->execute();
+	}
+	void manageState(Monster* currentMonsterObject) // EXAMPLE IMPLEMENTATION
+	{
+		if (currentMonsterObject->playerDistance < currentMonsterObject->aggroRange)
+		{
+			changeMovementState(currentMonsterObject, instance_AttackMovementState); // EXAMPLE IMPLEMENTATION
+		}
+	}
+};
+
+
+// TODO : SORT ATT MOV STATE
+
+class AttackMovementState : public MonsterMovementState //
+{
+protected:
+	virtual void executeAssignedStateBehaviour(Monster* currentMonsterObject) = 0;
+	virtual void manageState(Monster* currentMonsterObject) = 0;
+	// shared condition Dissengage Aggro
+
+};
+
+class ArmedAttackMovementState : public AttackMovementState
+{
+protected:
+	void executeAssignedStateBehaviour(Monster* currentMonsterObject);
+	// move to get in position to atk - atk
+	void manageState(Monster* currentMonsterObject);
+	// if atk state is unarmed - change state to unarmed mov state
+	// if cd change state to atk cd mov state
+};
+
+class AttackCooldownMovementState : public AttackMovementState
+{
+	void executeAssignedStateBehaviour(Monster* currentMonsterObject);
+	void manageState(Monster* currentMonsterObject);
+	// if atk state is rdy - change state to armed move state
+};
+
+// default atk state
+class UnarmedAttackMovementState : public AttackMovementState
+{
+	void executeAssignedStateBehaviour(Monster* currentMonsterObject);
+	void manageState(Monster* currentMonsterObject);
+	// if armed  - change state to armed att move state
+};
+
+class ResetMovementState : public MonsterMovementState
+{
+protected:
+	void executeAssignedStateBehaviour(Monster* currentMonsterObject)
+	{
+		currentMonsterObject->resetMovementState_MovementBehaviour->execute();
+	}
+	void manageState(Monster* currentMonsterObject) 
+	{
+		// if at reset pos - change state to inital state (guard)
+		// if aggro - move to atk state
+	}
+};
+
+
+// MOVEMENT BEHAVIOURS 
+		// used in MonsterMovementStates
+		// TODO: implement concrete movement behaviours
+		
+
+class MovementBehaviour 
+{
+	// changes monster in movement relevant way
+	virtual void execute(Monster*) = 0;
+};
+
+
+
+
+// ATTACK STATE - moze se zamijenit funkcionalnostima iz weapon klase
+
+
+
+class AttackState
+{
+	// call to see if atk rdy 
+};
+
+class AttackReady : public AttackState
+{
+	// execute weapon atk
+	// initiate appropriate attack cd 
+			// change atk state in monster to atk cd
+};
+
+class AttackNotReady : public AttackState
+{
+	// cooldown when called 
+	// go back to attackReady when cooldown = 0;
+};
+
+class Unarmed : public AttackState
+{};
+
