@@ -89,7 +89,8 @@ int main()
 
 	Repository repository;
 
-	repository.loadTexture(Repository::LINK | Repository::BLACK_MAGE | Repository::BLUE_BOOMERANG);
+	repository.loadTexture(Repository::LINK | Repository::BLACK_MAGE | Repository::BLUE_BOOMERANG | Repository::TEST_BACKGROUND);
+	repository.loadSoundEffect(Repository::BOOMERANG_THROW);
 	
 	
 
@@ -129,8 +130,19 @@ int main()
 	boomerangSprite.setOrigin(10, 10);
 	boomerangSprite.setPosition(0, 0);
 
+
+	sf::Sprite background;
+	background.setTexture(*repository.getTexture(Repository::TEST_BACKGROUND));
+
 	//collision box for the boomerang
 	sf::FloatRect boomerangCollision = boomerangSprite.getGlobalBounds();
+
+	//sound effects for the boomerang
+	sf::Sound boomerangThrow;
+	boomerangThrow.setBuffer(*repository.getSoundEffect(Repository::BOOMERANG_THROW));
+
+	sf::Music musicTest;
+	musicTest.openFromFile("music\\test.ogg");
 
 	//create the example enemy
 	sf::Sprite blackMage;
@@ -253,6 +265,7 @@ int main()
 			if (!projectileActive)
 			{
 				boomerangSprite.setPosition(link.getPosition().x - 25, link.getPosition().y);
+				boomerangThrow.play();
 			}
 
 			projectileActive = true;
@@ -382,6 +395,11 @@ int main()
 			default:
 				break;
 			}
+			if (boomerangSprite.getPosition().x > 800 && boomerangSprite.getPosition().y < 190)
+			{
+				if(musicTest.getStatus()!= sf::SoundSource::Status::Playing)
+				musicTest.play();
+			}
 
 			if (!(boomerangSprite.getPosition().x < window_width
 				&& boomerangSprite.getPosition().x > 0
@@ -407,10 +425,12 @@ int main()
 		
 		//draw everything
 		{
+			window.draw(background);
 			window.draw(link);
 			window.draw(blackMage);
 			window.draw(wall);
 			window.draw(wall2);
+			
 
 			if (projectileActive)
 				window.draw(boomerangSprite);
