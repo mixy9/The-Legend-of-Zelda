@@ -1,10 +1,10 @@
 #include "main.h"
+#include "Repository.h"
 
 #define WINDOW_TITLE	"The Legend of Zelda"
 #define IMAGE_NAME_LINK			"Link.png"
 #define IMAGE_NAME_BOOMERANG	"Boomerang.png"
 #define IMAGE_NAME_BLACKMAGE	"Blackmage.png"
-
 
 
 namespace movement
@@ -84,15 +84,15 @@ int main()
 	sf::Clock clock;
 	sf::Time delta;
 
-	//load needed textures
-	sf::Texture player;
-	player.loadFromFile(IMAGE_NAME_LINK);
 
-	sf::Texture boomerang;
-	boomerang.loadFromFile(IMAGE_NAME_BOOMERANG);
+	//Initialize and load the resource repository
 
-	sf::Texture enemy;
-	enemy.loadFromFile(IMAGE_NAME_BLACKMAGE);
+	Repository repository;
+
+	repository.loadTexture(Repository::LINK | Repository::BLACK_MAGE | Repository::BLUE_BOOMERANG);
+	
+	
+
 
 
 	//create the two obstacles used for this example
@@ -113,7 +113,7 @@ int main()
 
 	//create Link, the player character
 	sf::Sprite link;
-	link.setTexture(player);
+	link.setTexture(*repository.getTexture(Repository::LINK));
 	link.setPosition(100, 400);
 	link.setOrigin(50, 50);
 
@@ -124,7 +124,7 @@ int main()
 
 	//create the boomerang
 	sf::Sprite boomerangSprite;
-	boomerangSprite.setTexture(boomerang);
+	boomerangSprite.setTexture(*repository.getTexture(Repository::BLUE_BOOMERANG));
 	boomerangSprite.setScale(0.4f, 0.4f);
 	boomerangSprite.setOrigin(10, 10);
 	boomerangSprite.setPosition(0, 0);
@@ -134,7 +134,7 @@ int main()
 
 	//create the example enemy
 	sf::Sprite blackMage;
-	blackMage.setTexture(enemy);
+	blackMage.setTexture(*repository.getTexture(Repository::BLACK_MAGE));
 	blackMage.setPosition(800, 800);
 	blackMage.setScale(0.2f, 0.2f);
 
