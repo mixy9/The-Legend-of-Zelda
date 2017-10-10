@@ -1,85 +1,98 @@
-#include <SFML/Graphics.hpp>
-#include <iostream>
-#include <random>
-#include <vector>
+#include "main.h"
+
+#define WINDOW_TITLE	"The Legend of Zelda"
+#define IMAGE_NAME_LINK			"Link.png"
+#define IMAGE_NAME_BOOMERANG	"Boomerang.png"
+#define IMAGE_NAME_BLACKMAGE	"Blackmage.png"
 
 
-using namespace std;
 
 namespace movement
 {
-	float boomerangRotationSpeed = 0.2f;
-	float boomerangMovementSpeed = 0.1f;
-	float playerMovementSpeed = 0.06f;
-	float enemyMovementSpeed = 0.0001f;
+	float boomerangRotationSpeed = 1000.0f;
+	float boomerangMovementSpeed = 800.0f;
+	float playerMovementSpeed = 400.0f;
+	float enemyMovementSpeed = 1.0f;
 	vector<sf::FloatRect*> colliders;
 }
-	
-	// experimental npc movement collision detection function. I got it to work with my current obstacles but it may or may not work with obstacles different to the ones used in this example
-	void moveTowardPlayer(const sf::Sprite& link, sf::Sprite& character, const sf::FloatRect& collider, sf::FloatRect* linkCollider)
+
+// experimental npc movement collision detection function. I got it to work with my current obstacles but it may or may not work with obstacles different to the ones used in this example
+void moveTowardPlayer(const sf::Sprite& link, sf::Sprite& character, const sf::FloatRect& collider, sf::FloatRect* linkCollider, const sf::Time& delta)
+{
+	bool collision = false;
+	for (auto aCollider : movement::colliders)
 	{
-	
-		bool collision = false;
-		for (auto a : movement::colliders)
-		{			
-			if (*a == collider) continue;
-			if (collider.intersects(*a))
+		if (*aCollider == collider) continue;
+
+		if (collider.intersects(*aCollider))
+		{
+			collision = true;
+
+			if (*aCollider == *linkCollider)
 			{
-				collision = true;
-				if (*a == *linkCollider)
-				{
-					character.move(0.1, 0.1); //moves out of the way to avoid locking link in place
-					break;
-				}
-
-				//determines if an obstacle is vertical or horizontal, then determines which end of the obstacle the character is closer to, then moves the character toward that end (hopefully)
-				else if (a->height > a->width && abs(character.getPosition().y - a->top) > abs(character.getPosition().y - (a->top + a->height)))
-				{
-					character.move(0, 0.06f);
-				}
-				else if (a->height > a->width && abs(character.getPosition().y - a->top) < abs(character.getPosition().y - (a->top + a->height)))
-				{
-					character.move(0, -0.06f);
-				}
-				else if (a->height < a->width && abs(character.getPosition().x - a->left) > abs(character.getPosition().x - (a->left + a->width)))
-				{
-					character.move(0.06f, 0);
-				}
-				else if (a->height < a->width && abs(character.getPosition().x - a->left) < abs(character.getPosition().x - (a->left + a->width)))
-				{
-					character.move(-0.06f, 0);
-				}
+				character.move(400.0f*delta.asSeconds(), 400.0f*delta.asSeconds()); //moves out of the way to avoid locking link in place
+				break;
 			}
-			
+
+			//determines if an obstacle is vertical or horizontal, then determines which end of the obstacle the character is closer to, then moves the character toward that end (hopefully)
+			else if (aCollider->height > aCollider->width && abs(character.getPosition().y - aCollider->top) > abs(character.getPosition().y - (aCollider->top + aCollider->height)))
+			{
+				character.move(0, 0.06f);
+			}
+			else if (aCollider->height > aCollider->width && abs(character.getPosition().y - aCollider->top) < abs(character.getPosition().y - (aCollider->top + aCollider->height)))
+			{
+				character.move(0, -0.06f);
+			}
+			else if (aCollider->height < aCollider->width && abs(character.getPosition().x - aCollider->left) > abs(character.getPosition().x - (aCollider->left + aCollider->width)))
+			{
+				character.move(0.06f, 0);
+			}
+			else if (aCollider->height < aCollider->width && abs(character.getPosition().x - aCollider->left) < abs(character.getPosition().x - (aCollider->left + aCollider->width)))
+			{
+				character.move(-0.06f, 0);
+			}
 		}
-		// if there is no collision the character just follows the player. This way of moving NPCs is probably not good enough and something better will have to be implemented eventually
-		if (!collision)character.move(movement::enemyMovementSpeed*(link.getPosition() - character.getPosition()));
-		
-			
 	}
-	
+
+	// if there is no collision the character just follows the player. This way of moving NPCs is probably not good enough and something better will have to be implemented eventually
+	if (!collision)
+		character.move(movement::enemyMovementSpeed*delta.asSeconds()*(link.getPosition() - character.getPosition()));
+}
 
 
+bool hasCollided(std::vector<sf::FloatRect*> colliders, sf::FloatRect* linkPtr, sf::FloatRect linkCollision)
+{
+	for (auto aCollider : colliders)
+	{
+		if (aCollider == linkPtr) continue;
+		if (linkCollision.intersects(*aCollider))
+			return true;
+	}
 
+	return false;
+}
 
 int main()
 {
 	int window_width = 1000;
 	int window_height = 800;
 
-	
 
-	sf::RenderWindow window(sf::VideoMode(window_width, window_height), "The Legend of Zelda");
+
+	sf::RenderWindow window(sf::VideoMode(window_width, window_height), WINDOW_TITLE);
+
+	sf::Clock clock;
+	sf::Time delta;
 
 	//load needed textures
 	sf::Texture player;
-	player.loadFromFile("Link.png");
+	player.loadFromFile(IMAGE_NAME_LINK);
 
 	sf::Texture boomerang;
-	boomerang.loadFromFile("Boomerang.png");
+	boomerang.loadFromFile(IMAGE_NAME_BOOMERANG);
 
 	sf::Texture enemy;
-	enemy.loadFromFile("Blackmage.png");
+	enemy.loadFromFile(IMAGE_NAME_BLACKMAGE);
 
 
 	//create the two obstacles used for this example
@@ -96,8 +109,8 @@ int main()
 	sf::FloatRect* wallPtr = &wallCollision;
 	sf::FloatRect wall2Collision = wall2.getGlobalBounds();
 	sf::FloatRect* wall2Ptr = &wall2Collision;
-	
-	
+
+
 	//create Link, the player character
 	sf::Sprite link;
 	link.setTexture(player);
@@ -107,8 +120,8 @@ int main()
 	//collision box for link
 	sf::FloatRect linkCollision = link.getGlobalBounds();
 	sf::FloatRect* linkPtr = &linkCollision;
-	
-	
+
+
 	//create the boomerang
 	sf::Sprite boomerangSprite;
 	boomerangSprite.setTexture(boomerang);
@@ -124,11 +137,11 @@ int main()
 	blackMage.setTexture(enemy);
 	blackMage.setPosition(800, 800);
 	blackMage.setScale(0.2f, 0.2f);
-	
+
 	//collision box for the enemy
 	sf::FloatRect blackMageCollision = blackMage.getGlobalBounds();
 	sf::FloatRect* blackMagePtr = &blackMageCollision;
-	
+
 	//everyting on the screen that can block movement goes in the colliders vector
 	movement::colliders.push_back(blackMagePtr);
 	movement::colliders.push_back(linkPtr);
@@ -141,230 +154,99 @@ int main()
 	auto lastValidPosition = link.getPosition();
 	bool collision = false;
 
+	/* Main Game Loop */
 	while (window.isOpen())
 	{
+		/* Update */
 
+
+		delta = clock.restart();
+
+		// Handle events
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
-		
-		//move up
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::D)))
-		{
-			link.setRotation(0);		
 
-			//check for collision against every collider on the screen
-			for (auto a : movement::colliders)
+		// Handle movement
+		{
+			//move up
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 			{
-				if (a == linkPtr) continue; //this line prevents link from colliding with himself
-				if (linkCollision.intersects(*a))
+				link.setRotation(0);
+
+				//check for collision against every collider on the screen
+				if (!hasCollided(movement::colliders, linkPtr, linkCollision))
+					lastValidPosition = link.getPosition();
+				else
+					link.setPosition(lastValidPosition); //in case of collision move to last position where there was no collision
+
+				link.move(0, -movement::playerMovementSpeed*delta.asSeconds()); //after we resolved any collisions we can attempt to move again
+
+				if (!projectileActive) //without this part the projectile was changing direction mid flight :D
 				{
-					collision = true;
-					break;
+					projectileDirection = (int)link.getRotation();
 				}
-				else collision = false;
-
-			}
-			if (!collision)lastValidPosition = link.getPosition(); 
-			else link.setPosition(lastValidPosition); //in case of collision move to last position where there was no collision
-			link.move(0, -movement::playerMovementSpeed); //after we resolved any collisions we can attempt to move again
-
-			if (!projectileActive) //without this part the projectile was changing direction mid flight :D
-			{
-				projectileDirection = link.getRotation();
 			}
 
-		}
-		//move down
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::D)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::W)))
-		{
-			link.setRotation(180);
-
-			for (auto a : movement::colliders)
+			//move down
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
+				link.setRotation(180);
+
+				if (!hasCollided(movement::colliders, linkPtr, linkCollision))
+					lastValidPosition = link.getPosition();
+				else link.setPosition(lastValidPosition);
+				link.move(0, movement::playerMovementSpeed*delta.asSeconds());
+
+				if (!projectileActive)
 				{
-					collision = true;
-					break;
+					projectileDirection = (int)link.getRotation();
 				}
-				else collision = false;
-
 			}
-			if (!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(0, movement::playerMovementSpeed);
 
-			if (!projectileActive)
+			//move left
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
-				projectileDirection = link.getRotation();
-			}
-		}
-		//move left
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::D)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::W)))
-		{
-			
-			link.setRotation(270);		
 
-			for (auto a : movement::colliders)
-			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
-				{
-					collision = true;
+				link.setRotation(270);
+
+				if (!hasCollided(movement::colliders, linkPtr, linkCollision))
+					lastValidPosition = link.getPosition();
+				else
 					link.setPosition(lastValidPosition);
-					break;
-				}
-				else collision = false;
-			}
-			if(!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(-movement::playerMovementSpeed, 0);
-			
+
+				link.move(-movement::playerMovementSpeed*delta.asSeconds(), 0);
 
 
-			if (!projectileActive)
-			{
-				projectileDirection = link.getRotation();
-			}
-		}
 
-		//move right
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::A)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && !(sf::Keyboard::isKeyPressed(sf::Keyboard::W)))
-		{
-			link.setRotation(90);
-			
-			for (auto a : movement::colliders)
-			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
+				if (!projectileActive)
 				{
-					collision = true;
-					break;
+					projectileDirection = (int)link.getRotation();
 				}
-				else collision = false;
-
 			}
-			if (!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(movement::playerMovementSpeed, 0);
 
-			if (!projectileActive)
+			//move right
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 			{
-				projectileDirection = link.getRotation();
-			}
-		}
+				link.setRotation(90);
 
-		//move up right
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-		{
-			link.setRotation(45);
-			
+				if (!hasCollided(movement::colliders, linkPtr, linkCollision))
+					lastValidPosition = link.getPosition();
+				else
+					link.setPosition(lastValidPosition);
 
-			for (auto a : movement::colliders)
-			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
+				link.move(movement::playerMovementSpeed*delta.asSeconds(), 0);
+
+				if (!projectileActive)
 				{
-					collision = true;
-					break;
+					projectileDirection = (int)link.getRotation();
 				}
-				else collision = false;
-
-			}
-			if (!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(movement::playerMovementSpeed / 1.41f, -movement::playerMovementSpeed / 1.41f); //without dividing by 1.41 diagonal move speed would be faster than up-down/left right.
-																									  //number 1.41 chosen because it feels like the movement speeds are the same in all directions
-			if (!projectileActive)																	 //and because it's the square root of 2 and it makes it look like i was doing some math when i absolutely was not
-			{
-				projectileDirection = link.getRotation();
 			}
 		}
 
-		//move up left
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		{
-			link.setRotation(315);
-		
-
-			for (auto a : movement::colliders)
-			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
-				{
-					collision = true;
-					break;
-				}
-				else collision = false;
-
-			}
-			if (!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(-movement::playerMovementSpeed / 1.41f, -movement::playerMovementSpeed / 1.41f);
-
-			if (!projectileActive)
-			{
-				projectileDirection = link.getRotation();
-			}
-		}
-		//move down right
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-		{
-			link.setRotation(135);
-		
-
-			for (auto a : movement::colliders)
-			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
-				{
-					collision = true;
-					break;
-				}
-				else collision = false;
-
-			}
-			if (!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(movement::playerMovementSpeed / 1.41f, movement::playerMovementSpeed / 1.41f);
-
-			if (!projectileActive)
-			{
-				projectileDirection = link.getRotation();
-			}
-		}
-
-		//move down left
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		{
-			link.setRotation(225);
-		
-			
-			for (auto a : movement::colliders)
-			{
-				if (a == linkPtr) continue;
-				if (linkCollision.intersects(*a))
-				{
-					collision = true;
-					break;
-				}
-				else collision = false;
-
-			}
-			if (!collision)lastValidPosition = link.getPosition();
-			else link.setPosition(lastValidPosition);
-			link.move(-movement::playerMovementSpeed / 1.41f, movement::playerMovementSpeed / 1.41f);
-
-			if (!projectileActive)
-			{
-				projectileDirection = link.getRotation();
-			}
-		}
-	
 		//fires a projectile
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 		{
@@ -372,117 +254,173 @@ int main()
 			{
 				boomerangSprite.setPosition(link.getPosition().x - 25, link.getPosition().y);
 			}
-			projectileActive = true;
 
+			projectileActive = true;
 		}
 
 		//handles the projectile's flight
-		//NOTE: when we move to having actual animations and stop rotating link, we will have to determine the projectile direction some other way. Curently it's based off link's rotation.
+		//NOTE: when we move to having actual animations and stop rotating link,
+		// we will have to determine the projectile direction some other way.
+		// Curently it's based off link's rotation.
 		if (projectileActive)
 		{
-			if (projectileDirection == 90)
+			switch (projectileDirection)
 			{
-				boomerangSprite.move(movement::boomerangMovementSpeed, 0); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+			case 90:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
+					boomerangSprite.move(movement::boomerangMovementSpeed*delta.asSeconds(), 0);
+					boomerangSprite.rotate(movement::boomerangRotationSpeed*delta.asSeconds());
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 				}
-			}
-			if (projectileDirection == 0)
-			{
-				boomerangSprite.move(0, -movement::boomerangMovementSpeed); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+				break;
+			case 0:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
-				}
+					boomerangSprite.move(0, -movement::boomerangMovementSpeed*delta.asSeconds());
+					boomerangSprite.rotate(movement::boomerangRotationSpeed*delta.asSeconds());
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 
-			}
-			if (projectileDirection == 180)
-			{
-				boomerangSprite.move(0, movement::boomerangMovementSpeed); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
-				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
 				}
-			}
-			if (projectileDirection == 270)
-			{
-				boomerangSprite.move(-movement::boomerangMovementSpeed, 0); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+				break;
+			case 180:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
+					boomerangSprite.move(0, movement::boomerangMovementSpeed*delta.asSeconds());
+					boomerangSprite.rotate(movement::boomerangRotationSpeed*delta.asSeconds());
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 				}
-			}
-			if (projectileDirection == 45)
-			{
-				boomerangSprite.move(movement::boomerangMovementSpeed/1.5f, -movement::boomerangMovementSpeed/1.5f); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+				break;
+			case 270:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
+					boomerangSprite.move(-movement::boomerangMovementSpeed*delta.asSeconds(), 0);
+					boomerangSprite.rotate(movement::boomerangRotationSpeed*delta.asSeconds());
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 				}
-			}
-			if (projectileDirection == 315)
-			{
-				boomerangSprite.move(-movement::boomerangMovementSpeed / 1.5f, -movement::boomerangMovementSpeed / 1.5f); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+				break;
+		/*	case 45:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
+					boomerangSprite.move(movement::boomerangMovementSpeed / 1.5f, -movement::boomerangMovementSpeed / 1.5f);
+					boomerangSprite.rotate(movement::boomerangRotationSpeed);
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 				}
-			}
-			if (projectileDirection == 135)
-			{
-				boomerangSprite.move(movement::boomerangMovementSpeed / 1.5f, movement::boomerangMovementSpeed / 1.5f); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+				break;
+			case 315:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
+					boomerangSprite.move(-movement::boomerangMovementSpeed / 1.5f, -movement::boomerangMovementSpeed / 1.5f);
+					boomerangSprite.rotate(movement::boomerangRotationSpeed);
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 				}
-			}
-			if (projectileDirection == 225)
-			{
-				boomerangSprite.move(-movement::boomerangMovementSpeed / 1.5f, movement::boomerangMovementSpeed / 1.5f); boomerangSprite.rotate(movement::boomerangRotationSpeed);
-				for (auto a : movement::colliders)
+				break;
+			case 135:
 				{
-					if (a == linkPtr) continue;
-					if (boomerangCollision.intersects(*a)) { projectileActive = false; }
+					boomerangSprite.move(movement::boomerangMovementSpeed / 1.5f, movement::boomerangMovementSpeed / 1.5f);
+					boomerangSprite.rotate(movement::boomerangRotationSpeed);
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
 				}
+				break;
+			case 225:
+				{
+					boomerangSprite.move(-movement::boomerangMovementSpeed / 1.5f, movement::boomerangMovementSpeed / 1.5f);
+					boomerangSprite.rotate(movement::boomerangRotationSpeed);
+					for (auto aCollider : movement::colliders)
+					{
+						if (aCollider == linkPtr) continue;
+						if (boomerangCollision.intersects(*aCollider))
+						{
+							projectileActive = false;
+						}
+					}
+				}
+				break;*/
+			default:
+				break;
 			}
 
-			if (!(boomerangSprite.getPosition().x < window_width && boomerangSprite.getPosition().x >0 && boomerangSprite.getPosition().y < window_height && boomerangSprite.getPosition().y >0))
+			if (!(boomerangSprite.getPosition().x < window_width
+				&& boomerangSprite.getPosition().x > 0
+				&& boomerangSprite.getPosition().y < window_height
+				&& boomerangSprite.getPosition().y > 0))
 			{
 				projectileActive = false;
-				projectileDirection = link.getRotation();
+				projectileDirection = (int)link.getRotation();
 			}
 		}
 
-		moveTowardPlayer(link, blackMage, blackMageCollision, &linkCollision); 
+		moveTowardPlayer(link, blackMage, blackMageCollision, &linkCollision, delta);
 
 		//window.clear always goes first
 		window.clear(sf::Color::White);
 
 		//collision boxes have to update positions every cycle to follow their sprites
-		linkCollision		= link.getGlobalBounds(); 
-		blackMageCollision	= blackMage.getGlobalBounds();
-		boomerangCollision	= boomerangSprite.getGlobalBounds();
+		linkCollision = link.getGlobalBounds();
+		blackMageCollision = blackMage.getGlobalBounds();
+		boomerangCollision = boomerangSprite.getGlobalBounds();
 
+		/* Render */
+		
 		//draw everything
-		window.draw(link);
-		window.draw(blackMage);
-		window.draw(wall);
-		window.draw(wall2);
-		if (projectileActive) window.draw(boomerangSprite);
+		{
+			window.draw(link);
+			window.draw(blackMage);
+			window.draw(wall);
+			window.draw(wall2);
 
+			if (projectileActive)
+				window.draw(boomerangSprite);
+		}
+
+		/* Switch front-buffer with back-buffer */
 		//.display() always goes last
 		window.display();
 
-	}//end of main while loop
-	
-	return 0;
+	} //end of main game loop
 
+	return 0;
 }
