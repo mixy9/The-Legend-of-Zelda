@@ -1,6 +1,7 @@
 #pragma once
 #include "main.h"
 #include "Repository.h"
+#include <unordered_map>
 
 class Repository
 {
@@ -12,8 +13,8 @@ private:
 public:
 	Repository();
 
-	void loadTexture(string name, string path);
-	void loadSoundEffect(string name, string path);
+	void loadTexture(string path);
+	void loadSoundEffect(string path);
 
 	const unique_ptr<sf::Texture>& getTexture(string name);
 	const unique_ptr<sf::SoundBuffer>& getSoundEffect(string);

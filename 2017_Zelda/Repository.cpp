@@ -6,12 +6,11 @@ Repository::Repository()
 {
 }
 
-void Repository::loadSoundEffect(string name, string path)
+void Repository::loadSoundEffect(string path)
 {
 	sf::SoundBuffer soundEffect;
 	soundEffect.loadFromFile(path);
-	auto tempPtr = make_unique<sf::SoundBuffer>(soundEffect);
-	soundEffects.emplace(name, move(tempPtr));
+	soundEffects.emplace(path, move(make_unique<sf::SoundBuffer>(soundEffect)));
 }
 
 const unique_ptr<sf::SoundBuffer>& Repository::getSoundEffect(string name)
@@ -19,12 +18,11 @@ const unique_ptr<sf::SoundBuffer>& Repository::getSoundEffect(string name)
 	return soundEffects[name];
 }
 
-void Repository::loadTexture(string name, string path)
+void Repository::loadTexture(string path)
 {
 	sf::Texture texture;
 	texture.loadFromFile(path);
-	auto tempPtr = make_unique<sf::Texture>(texture);
-	textures.emplace(name, move(tempPtr));
+	textures.emplace(path, move(make_unique<sf::Texture>(texture)));
 }
 
 const unique_ptr<sf::Texture>& Repository::getTexture(string name)

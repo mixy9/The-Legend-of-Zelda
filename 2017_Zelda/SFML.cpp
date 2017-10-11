@@ -17,6 +17,18 @@ namespace movement
 	vector<sf::FloatRect*> colliders;
 }
 
+namespace filename
+{
+	string linkTexture = "textures\\Link.png";
+	string blackMageTexture = "textures\\Blackmage.png";
+	string boomerangTexture = "textures\\Boomerang.png";
+	string backgroundTexture = "textures\\test_background.jpg";
+	string boomerangThrow = "sound effects\\boomerang.ogg";
+	string testMusic = "music\\test.ogg";
+
+
+}
+
 // experimental npc movement collision detection function. I got it to work with my current obstacles but it may or may not work with obstacles different to the ones used in this example
 void moveTowardPlayer(const sf::Sprite& link, sf::Sprite& character, const sf::FloatRect& collider, sf::FloatRect* linkCollider, const sf::Time& delta)
 {
@@ -90,11 +102,11 @@ int main()
 
 	Repository repository;
 
-	repository.loadTexture("link", "textures\\Link.png");
-	repository.loadTexture("blackMage", "textures\\Blackmage.png");
-	repository.loadTexture("boomerang", "textures\\Boomerang.png");
-	repository.loadTexture("background", "textures\\test_background.jpg");
-	repository.loadSoundEffect("boomerangThrow", "sound effects\\boomerang.ogg");
+	repository.loadTexture(filename::linkTexture);
+	repository.loadTexture(filename::blackMageTexture);
+	repository.loadTexture(filename::boomerangTexture);
+	repository.loadTexture(filename::backgroundTexture);
+	repository.loadSoundEffect(filename::boomerangThrow);
 	
 	
 
@@ -118,7 +130,7 @@ int main()
 
 	//create Link, the player character
 	sf::Sprite link;
-	link.setTexture(*repository.getTexture("link"));
+	link.setTexture(*repository.getTexture(filename::linkTexture));
 	link.setPosition(100, 400);
 	link.setOrigin(50, 50);
 
@@ -129,14 +141,14 @@ int main()
 
 	//create the boomerang
 	sf::Sprite boomerangSprite;
-	boomerangSprite.setTexture(*repository.getTexture("boomerang"));
+	boomerangSprite.setTexture(*repository.getTexture(filename::boomerangTexture));
 	boomerangSprite.setScale(0.4f, 0.4f);
 	boomerangSprite.setOrigin(10, 10);
 	boomerangSprite.setPosition(0, 0);
 
 
 	sf::Sprite background;
-	background.setTexture(*repository.getTexture("background"));
+	background.setTexture(*repository.getTexture(filename::backgroundTexture));
 
 	//collision box for the boomerang
 	sf::FloatRect boomerangCollision = boomerangSprite.getGlobalBounds();
@@ -144,14 +156,14 @@ int main()
 	//sound effects for the boomerang
 	sf::Sound boomerangThrow;
 	
-	boomerangThrow.setBuffer(*repository.getSoundEffect("boomerangThrow"));
+	boomerangThrow.setBuffer(*repository.getSoundEffect(filename::boomerangThrow));
 
 	sf::Music musicTest;
-	musicTest.openFromFile("music\\test.ogg");
+	musicTest.openFromFile(filename::testMusic);
 
 	//create the example enemy
 	sf::Sprite blackMage;
-	blackMage.setTexture(*repository.getTexture("blackMage"));
+	blackMage.setTexture(*repository.getTexture(filename::blackMageTexture));
 	blackMage.setPosition(800, 800);
 	blackMage.setScale(0.2f, 0.2f);
 
