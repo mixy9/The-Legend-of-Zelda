@@ -1,88 +1,35 @@
+#include "main.h"
 #include "Repository.h"
-
 
 
 Repository::Repository()
 {
 }
 
-void Repository::loadSoundEffect(int flags)
+void Repository::loadSoundEffect(string name, string path)
 {
-	if (flags & BOOMERANG_THROW)
-	{
-		sf::SoundBuffer boomThrow;
-		boomThrow.loadFromFile("sound effects\\boomerang.ogg");
-		auto boomptr = make_unique<sf::SoundBuffer>(boomThrow);
-		soundEffects.emplace_back(move(boomptr));
-	}
+	sf::SoundBuffer soundEffect;
+	soundEffect.loadFromFile(path);
+	auto tempPtr = make_unique<sf::SoundBuffer>(soundEffect);
+	soundEffects.emplace(name, move(tempPtr));
 }
 
-const sndPtr& Repository::getSoundEffect(int flags)
+const unique_ptr<sf::SoundBuffer>& Repository::getSoundEffect(string name)
 {
-
-	if (flags & BOOMERANG_THROW)
-	{
-		return soundEffects[vBOOMERANG_THROW];
-	}
-	else return 0;
-}
-void Repository::loadTexture(int flags)
-{
-	
-	if (flags & LINK)
-	{
-		sf::Texture link;
-		link.loadFromFile("textures\\Link.png");
-		auto linkptr = make_unique<sf::Texture>(link);
-		textures.emplace_back(move(linkptr));
-	}
-	
-	if (flags & BLUE_BOOMERANG)
-	{
-		sf::Texture boomerang;
-		boomerang.loadFromFile("textures\\Boomerang.png");
-		auto boomptr = make_unique<sf::Texture>(boomerang);
-		textures.emplace_back(move(boomptr));
-	}
-
-	if (flags & BLACK_MAGE)
-	{
-		sf::Texture enemy;
-		enemy.loadFromFile("textures\\Blackmage.png");
-		auto enemyptr = make_unique<sf::Texture>(enemy);
-		textures.emplace_back(move(enemyptr));
-	}
-	if (flags & TEST_BACKGROUND)
-	{
-		sf::Texture testBackground;
-		testBackground.loadFromFile("textures\\test_background.jpg");
-		auto bgrndPtr = make_unique<sf::Texture>(testBackground);
-		textures.emplace_back(move(bgrndPtr));
-	}
+	return soundEffects[name];
 }
 
-const texPtr& Repository::getTexture(int flags)
+void Repository::loadTexture(string name, string path)
 {
+	sf::Texture texture;
+	texture.loadFromFile(path);
+	auto tempPtr = make_unique<sf::Texture>(texture);
+	textures.emplace(name, move(tempPtr));
+}
 
-	if (flags & LINK)
-	{
-		return textures[vLINK];
-	}
-
-	if (flags & BLUE_BOOMERANG)
-	{
-		return textures[vBLUE_BOOMERANG];
-	}
-
-	if (flags & BLACK_MAGE)
-	{
-		return textures[vBLACK_MAGE];
-	}
-	if (flags & TEST_BACKGROUND)
-	{
-		return textures[vTEST_BACKGROUND];
-	}
-	else return 0;
+const unique_ptr<sf::Texture>& Repository::getTexture(string name)
+{
+	return textures[name];
 }
 
 

@@ -1,6 +1,7 @@
 #include "main.h"
 #include "Repository.h"
 
+
 #define WINDOW_TITLE	"The Legend of Zelda"
 #define IMAGE_NAME_LINK			"Link.png"
 #define IMAGE_NAME_BOOMERANG	"Boomerang.png"
@@ -89,8 +90,11 @@ int main()
 
 	Repository repository;
 
-	repository.loadTexture(Repository::LINK | Repository::BLACK_MAGE | Repository::BLUE_BOOMERANG | Repository::TEST_BACKGROUND);
-	repository.loadSoundEffect(Repository::BOOMERANG_THROW);
+	repository.loadTexture("link", "textures\\Link.png");
+	repository.loadTexture("blackMage", "textures\\Blackmage.png");
+	repository.loadTexture("boomerang", "textures\\Boomerang.png");
+	repository.loadTexture("background", "textures\\test_background.jpg");
+	repository.loadSoundEffect("boomerangThrow", "sound effects\\boomerang.ogg");
 	
 	
 
@@ -114,7 +118,7 @@ int main()
 
 	//create Link, the player character
 	sf::Sprite link;
-	link.setTexture(*repository.getTexture(Repository::LINK));
+	link.setTexture(*repository.getTexture("link"));
 	link.setPosition(100, 400);
 	link.setOrigin(50, 50);
 
@@ -125,28 +129,29 @@ int main()
 
 	//create the boomerang
 	sf::Sprite boomerangSprite;
-	boomerangSprite.setTexture(*repository.getTexture(Repository::BLUE_BOOMERANG));
+	boomerangSprite.setTexture(*repository.getTexture("boomerang"));
 	boomerangSprite.setScale(0.4f, 0.4f);
 	boomerangSprite.setOrigin(10, 10);
 	boomerangSprite.setPosition(0, 0);
 
 
 	sf::Sprite background;
-	background.setTexture(*repository.getTexture(Repository::TEST_BACKGROUND));
+	background.setTexture(*repository.getTexture("background"));
 
 	//collision box for the boomerang
 	sf::FloatRect boomerangCollision = boomerangSprite.getGlobalBounds();
 
 	//sound effects for the boomerang
 	sf::Sound boomerangThrow;
-	boomerangThrow.setBuffer(*repository.getSoundEffect(Repository::BOOMERANG_THROW));
+	
+	boomerangThrow.setBuffer(*repository.getSoundEffect("boomerangThrow"));
 
 	sf::Music musicTest;
 	musicTest.openFromFile("music\\test.ogg");
 
 	//create the example enemy
 	sf::Sprite blackMage;
-	blackMage.setTexture(*repository.getTexture(Repository::BLACK_MAGE));
+	blackMage.setTexture(*repository.getTexture("blackMage"));
 	blackMage.setPosition(800, 800);
 	blackMage.setScale(0.2f, 0.2f);
 
